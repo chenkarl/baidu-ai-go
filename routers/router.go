@@ -9,7 +9,6 @@ package routers
 
 import (
 	"../controllers"
-
 	"github.com/astaxie/beego"
 )
 
@@ -27,4 +26,6 @@ func init() {
 		),
 	)
 	beego.AddNamespace(ns)
+	beego.Router("/commen", &controllers.CommenController{})
+	beego.Router("/upload", &controllers.UploadController{})
 }
