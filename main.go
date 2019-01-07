@@ -4,6 +4,7 @@ import (
 	_ "./routers"
 
 	"github.com/astaxie/beego"
+	_ "github.com/garyburd/redigo/redis"
 )
 
 func main() {
