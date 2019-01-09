@@ -11,3 +11,4 @@ beego 本身原因
 完成功能
 网站搭建
 redis连接
+获取access_token，存入redis中，并设置定时器定时更新

@@ -2,14 +2,28 @@ package controllers
 
 import (
 	"fmt"
+	"log"
+	"time"
 
 	"../models"
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/cache"
+	_ "github.com/astaxie/beego/cache/redis"
+	"github.com/astaxie/beego/httplib"
 )
 
 // CommenController operations for Commen
 type CommenController struct {
 	beego.Controller
+}
+
+type BaiduAccessTokenResult struct {
+	Refresh_token  string `json:"refresh_token"`
+	Expires_in     int32  `json:"expires_in"`
+	Session_key    string `json:"session_key"`
+	Access_token   string `json:"access_token"`
+	Scope          string `json:"scope"`
+	Session_secret string `json:"session_secret"`
 }
 
 // URLMapping ...
@@ -61,12 +75,28 @@ func (c *CommenController) GetAll() {
 	c.ServeJSON()
 }
 
+// Get ...
+// @Title Get
+// @Description get BaiduAccessToken save to redis
 func (c *CommenController) Get() {
-	c.Ctx.WriteString("hello")
-	fmt.Println("test")
-	// c.Data["Website"] = "beego.me"
-	// c.Data["Email"] = "astaxie@gmail.com"
-	// c.TplName = "index.tpl"
+	url := "http://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=" + beego.AppConfig.String("client_id") + "&client_secret=" + beego.AppConfig.String("client_secret")
+	fmt.Println(url)
+	req := httplib.Get(url)
+	var result BaiduAccessTokenResult
+	err := req.ToJSON(&result)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	bm, err := cache.NewCache("redis", `{"conn": "127.0.0.1:6379","dbNum":"0"}`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = bm.Put("BaiduAccessToken", result.Access_token, 30*24*3600*time.Second)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(result.Access_token)
 }
 
 // Put ...
