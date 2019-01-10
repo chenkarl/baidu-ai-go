@@ -11,4 +11,9 @@ beego 本身原因
 完成功能
 网站搭建
 redis连接
-获取access_token，存入redis中，并设置定时器定时更新
+获取access_token，存入redis中
+待完成功能
+，并设置定时器定时更新
+图片进行base64编码
+请求识别接口，获取结果
+结果存入mysql数据库中
