@@ -33,6 +33,38 @@ type BaiduAccessTokenResult struct {
 	SessionSecret string `json:"session_secret"`
 }
 
+// Location ...
+type Location struct {
+	Left     float64 `json:"left"`
+	Top      float64 `json:"top"`
+	Width    float64 `json:"width"`
+	Height   float64 `json:"height"`
+	Rotation int64   `json:"rotation"`
+}
+
+// Angle ...
+type Angle struct {
+	Yaw   float64 `json:"yaw"`
+	Pitch float64 `json:"pitch"`
+	Roll  float64 `json:"roll"`
+}
+
+// Face ...
+type Face struct {
+	FaceToken       string   `json:"face_token"`
+	Location        Location `json:"location"`
+	FaceProbability float64  `json:"face_probability"`
+	Angle           Angle    `json:"angle"`
+	Age             float64  `json:"age"`
+	Beauty          float64  `json:"beauty"`
+}
+
+// Result ...
+type Result struct {
+	FaceNum  int    `json:"face_num"`
+	FaceList []Face `json:"face_list"`
+}
+
 // BaiduFaceCheckResult ...
 type BaiduFaceCheckResult struct {
 	ErrorCode int    `json:"error_code"`
@@ -40,6 +72,7 @@ type BaiduFaceCheckResult struct {
 	LogID     int64  `json:"log_id"`
 	Timestamp int32  `json:"timestamp"`
 	Cached    int    `json:"cached"`
+	Result    Result `json:"result"`
 }
 
 // URLMapping ...
@@ -74,7 +107,7 @@ func (c *CommenController) Post() {
 		encodingString := base64.StdEncoding.EncodeToString(p[:n])
 		bm, err := lib.Redis()
 		if err != nil {
-			log.Fatal(err)
+			beego.Error(err)
 			return
 		}
 		v, _ := redis.String(bm.Get("BaiduAccessToken"), err)
@@ -82,16 +115,17 @@ func (c *CommenController) Post() {
 		req := httplib.Post(url)
 		req.Param("image", encodingString)
 		req.Param("image_type", "BASE64")
-		req.Param("face_field", "age,beauty,expression,face_shape,gender,glasses,landmark,race,quality,eye_status,emotion,face_type")
+		req.Param("face_field", "age,beauty")
 		req.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
-		ret, err := req.String()
+		var ret BaiduFaceCheckResult
+		err = req.ToJSON(&ret)
 		if err != nil {
-			log.Fatal(err)
+			beego.Error(err)
 		}
-		log.Fatal(ret)
-		return
+		beego.Debug(ret.Result.FaceList[0].Beauty)
+		c.Data["json"] = ret
+		c.ServeJSON()
 	}
-	c.Ctx.WriteString("保存成功")
 }
 
 // GetOne ...
